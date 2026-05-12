@@ -28,3 +28,16 @@ Como administrador de bases de datos, aquí están las entidades principales que
 ---
 
 ¿Quieres profundizar en alguna entidad, definir los índices, las reglas de negocio, o hablar de normalización y particionamiento?
+
+Las entidades con sus atributos y tipo en forma de tabla para cada una de las entidades
+<img width="664" height="690" alt="image" src="https://github.com/user-attachments/assets/cc335b06-38eb-4db7-8475-23df7cff1405" />
+<img width="659" height="657" alt="image" src="https://github.com/user-attachments/assets/ce3687a8-7b4f-4885-8b6c-8db981845f2c" />
+<img width="586" height="736" alt="image" src="https://github.com/user-attachments/assets/272d85f9-a535-4da2-a7f2-786650d05965" />
+<img width="657" height="562" alt="image" src="https://github.com/user-attachments/assets/cdcafb52-1b2f-4601-914f-f7370e703bf1" />
+<img width="662" height="604" alt="image" src="https://github.com/user-attachments/assets/5fc0595c-8a61-4948-ac12-294a8a0c0b96" />
+Las 10 entidades quedan documentadas con sus atributos completos. Algunos criterios de diseño que vale la pena destacar:
+DETALLE_PEDIDO guarda precio_unitario como campo propio (no referencia al catálogo) para que el precio histórico quede fijo aunque el menú cambie después.
+INVENTARIO usa DECIMAL en lugar de INT para el stock, pensando en ingredientes que se miden por peso o volumen (kg de queso, litros de salsa), no solo por piezas.
+PAGO es una entidad separada de PEDIDO para soportar pagos divididos o reembolsos parciales sin alterar el pedido original.
+Los campos ENUM (estado, tipo, rol, método) conviene implementarlos como tablas de catálogo independientes en producción, para mayor flexibilidad.
+¿Quieres que continúe con los índices recomendados, las relaciones con cardinalidad detallada, o el script DDL en SQL?

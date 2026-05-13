@@ -1,46 +1,46 @@
-# 📜 MASTER PROMPT: ESPECIFICACIÓN TÉCNICA ARQUITECTÓNICA v2.0
+# 📜 PROMPT MAESTRO: ESPECIFICACIÓN TÉCNICA ARQUITECTÓNICA v2.0
 ## Sistema de Gestión Transaccional Cloud-Native "Antigravity Domino's"
-**Versión:** 2.0.0 | **Entorno:** Dart 3.5+ / Flutter 3.22+ | **Backend:** Firebase Ecosystem (Firestore, Cloud Functions, Auth, Storage) | **Plataformas:** Android, iOS, Web (PWA), Windows | **Alcance:** Enterprise-Grade, Offline-First, Multi-Tenant Ready
+**Versión:** 2.0.0 | **Entorno:** Dart 3.5+ / Flutter 3.22+ | **Backend:** Ecosistema Firebase (Firestore, Cloud Functions, Auth, Storage) | **Plataformas:** Android, iOS, Web (PWA), Windows | **Alcance:** Grado Empresarial, Offline-First, Preparado para Multi-Tenant
 
 ---
 
-### 🎯 VISIÓN ARQUITECTÓNICA & CONTEXTO CLOUD
-Actúa como **Lead Solutions Architect & Cloud Engineer** especializado en sistemas transaccionales de alta concurrencia, arquitecturas reactivas y plataformas de consumo masivo (QSR/Retail). Tu misión es diseñar e implementar los cimientos técnicos de una solución **cloud-native**, escalable y tolerante a fallos, capaz de gestionar miles de pedidos concurrentes con precisión financiera absoluta, sincronización en tiempo real y operación offline robusta. 
+### 🎯 VISIÓN ARQUITECTÓNICA Y CONTEXTO CLOUD
+Actúa como **Arquitecto de Soluciones Principal e Ingeniero Cloud** especializado en sistemas transaccionales de alta concurrencia, arquitecturas reactivas y plataformas de consumo masivo (QSR/Retail). Tu misión es diseñar e implementar los cimientos técnicos de una solución nativa para la nube, escalable y tolerante a fallos, capaz de gestionar miles de pedidos concurrentes con precisión financiera absoluta, sincronización en tiempo real y una operación offline robusta. 
 
-El sistema debe adherirse estrictamente a **Clean Architecture**, donde Firebase es tratado como un **detalle de infraestructura** aislado en la capa de datos. El dominio permanece puro, testable y agnóstico a proveedores. La plataforma debe cumplir con estándares de ingeniería moderna: inmutabilidad, tipado estricto, CI/CD automatizado, observabilidad completa y gobernanza de datos bajo regulaciones de privacidad (GDPR/LGPD).
+El sistema debe adherirse estrictamente a la **Arquitectura Limpia (Clean Architecture)**, donde Firebase se trata exclusivamente como un **detalle de infraestructura** aislado en la capa de datos. El dominio permanece puro, comprobable (`testable`) e independiente de proveedores. La plataforma debe cumplir con estándares de ingeniería moderna: inmutabilidad, tipado estricto, CI/CD automatizado, observabilidad completa y gobernanza de datos bajo regulaciones de privacidad (GDPR/LGPD).
 
 ---
 
-### 🏛️ 1. ARQUITECTURA CLOUD-NATIVE & FIREBASE INTEGRATION
+### 🏛️ 1. ARQUITECTURA CLOUD-NATIVE E INTEGRACIÓN FIREBASE
 Implementa una arquitectura hexagonal donde cada capa tiene responsabilidades delimitadas y Firebase se consume únicamente en los bordes del sistema.
 
 - **📦 Capa de Dominio (`domain/`)**
-  - Entidades inmutables (`@freezed`), Value Objects, Casos de Uso puros (`Callable`/`UseCase`).
-  - **Cero imports de Firebase, Firebase SDK, o `package:flutter`**.
+  - Entidades inmutables (`@freezed`), Objetos de Valor, Casos de Uso puros (`Callable`/`UseCase`).
+  - **Cero importaciones de Firebase, SDK de Firebase o `package:flutter`**.
   - Contratos de repositorio abstractos (`OrderRepository`, `InventoryRepository`).
   - Manejo de errores explícito con `Either<Failure, T>` o `Result<T, Failure>`.
-  - Reglas de negocio invariantes: validación de sucursal-Empleado, máquina de estados, umbrales de stock.
+  - Reglas de negocio invariantes: validación de sucursal-Empleado, máquina de estados, umbrales de inventario.
 
 - **🗄️ Capa de Datos (`data/`)**
-  - `RemoteDataSource`: Wrapper tipado sobre `cloud_firestore` y `cloud_functions`. Implementa `runTransaction`, `batch`, y `serverTimestamp`.
-  - `LocalDataSource`: Cache offline con `hive`/`isar` o Firebase `Persistence` nativo. Estrategia `L1 (Memory) → L2 (Disk) → L3 (Cloud)`.
-  - `RepositoryImpl`: Orquestador que aplica políticas de fallback, reconciliación de conflictos, y mapeo `Snapshot → DTO → Entity`.
-  - **Firebase como Infrastructure Detail:** Solo referenciado aquí. Uso de `FirebaseApp.initializeApp()` controlado por `core/injector/`.
+  - `RemoteDataSource`: Envoltorio tipado sobre `cloud_firestore` y `cloud_functions`. Implementa `runTransaction`, `batch` y `serverTimestamp`.
+  - `LocalDataSource`: Caché offline con `hive`/`isar` o persistencia nativa de Firebase. Estrategia `L1 (Memoria) → L2 (Disco) → L3 (Nube)`.
+  - `RepositoryImpl`: Orquestador que aplica políticas de respaldo, reconciliación de conflictos y mapeo `Snapshot → DTO → Entity`.
+  - **Firebase como Detalle de Infraestructura:** Solo referenciado aquí. Uso de `FirebaseApp.initializeApp()` controlado por `core/injector/`.
 
-- **⚡ Cloud Functions & Server-Side Logic**
-  - Lógica crítica (validación de stock atómica, cálculo de impuestos, transiciones de estado, generación de recibos) ejecutada en **Cloud Functions (2nd Gen)**.
-  - Prevención de manipulación cliente: Firestore Security Rules rechazan escrituras directas a `inventory.stock_actual` sin verificación de función.
+- **⚡ Cloud Functions y Lógica del Servidor**
+  - Lógica crítica (validación atómica de inventario, cálculo de impuestos, transiciones de estado, generación de recibos) ejecutada en **Cloud Functions (2da Generación)**.
+  - Prevención de manipulación desde el cliente: Reglas de Seguridad de Firestore rechazan escrituras directas a `inventory.stock_actual` sin verificación por función.
   - Colas de mensajería: `Pub/Sub` o `Task Queues` para procesamiento asíncrono (notificaciones, auditoría, reconciliación de pagos).
 
 ---
 
-### ☁️ 2. ESTRATEGIA DE DATOS EN LA NUBE, SINCRONIZACIÓN & OFFLINE-FIRST
+### ☁️ 2. ESTRATEGIA DE DATOS EN LA NUBE, SINCRONIZACIÓN Y OFFLINE-FIRST
 Diseña un flujo de datos resiliente, predecible y optimizado para redes inestables.
 
-- **📊 Estructura Firestore (Collections & Subcollections)**
+- **📊 Estructura Firestore (Colecciones y Subcolecciones)**
   ```
   /categories/{catId}
-  /products/{prodId} (subcollection: /variants/{varId})
+  /products/{prodId} (subcolección: /variants/{varId})
   /branches/{branchId}
   /inventory/{branchId}/stock/{productId} → {stock_actual, stock_minimo, version, last_sync}
   /orders/{orderId} → {cliente, direccion, empleado_id, estado, total, created_at}
@@ -49,55 +49,58 @@ Diseña un flujo de datos resiliente, predecible y optimizado para redes inestab
   /users/{uid} → {rol, sucursal_asignada, perfil, historial_fidelidad}
   ```
 
-- **🔄 Sincronización & Offline Strategy**
+- **🔄 Sincronización y Estrategia Offline**
   - `enablePersistence()` activado con límites de caché (`cacheSizeBytes: 50MB`).
-  - **Optimistic UI:** BLoC emite `OrderSubmittedOptimistic` → actualiza UI inmediatamente → Cloud Function confirma o rechaza → BLoC emite `OrderConfirmed`/`OrderRejected` con rollback si falla.
+  - **UI Optimista:** BLoC emite `OrderSubmittedOptimistic` → actualiza UI inmediatamente → Cloud Function confirma o rechaza → BLoC emite `OrderConfirmed`/`OrderRejected` con rollback si falla.
   - **Cola de Reintentos:** `workmanager` (Android) / `BGTaskScheduler` (iOS) / `BackgroundSync` (Web) para enviar transacciones pendientes.
   - **Resolución de Conflictos:** `last-write-wins` con `serverTimestamp` + validación de `version` en inventario. Rechazo automático si `stock_actual < 0`.
 
-- **📦 Firebase Storage & Assets**
+- **📦 Firebase Storage y Activos**
   - Estructura: `/products/{id}/main.webp`, `/receipts/{orderId}.pdf`, `/delivery/{orderId}/photo.webp`.
   - Compresión automática, CDN habilitado, reglas de acceso por rol y tiempo de expiración.
 
 ---
 
 ### 📱 3. IMPLEMENTACIÓN MULTIPLATAFORMA (Android / iOS / Web / Windows)
-Una sola base de código, adaptaciones específicas por plataforma y comportamientos nativos optimizados.
+Una única base de código, adaptaciones específicas por plataforma y comportamientos nativos optimizados.
 
 | Plataforma | Optimizaciones Clave | Integraciones Firebase/Nativas |
 |------------|----------------------|--------------------------------|
-| **Android** | Target SDK 34+, Material 3, `RenderObject` virtualizado, `LazyColumn/GridView`, `SafeArea` estricto | FCM, WorkManager, App Links, Google Play Billing (futuro), Crashlytics NDK |
-| **iOS** | Swift interop mínimo, `UICollectionView`/`SwiftUI` bridges si es necesario, `Background App Refresh` | FCM (APNs proxy), Universal Links, App Clips (reorden rápido), Sign in with Apple |
-| **Web (PWA)** | Service Workers, `go_router` con URLs limpias, `LayoutBuilder` responsive, `IndexedDB` fallback | Firebase Hosting, Analytics (GA4), Remote Config para A/B testing, PWA manifest & offline cache |
-| **Windows** | MSIX packaging, `NavigationRail` master-detail, `FocusTraversal` para teclado, alto DPI | Local SQLite cache fallback, Windows Notifications, Direct3D rendering optimizations |
+| **Android** | SDK Objetivo 34+, Material 3, renderizado virtualizado, listas perezosas (`LazyColumn/GridView`), `SafeArea` estricto | FCM, WorkManager, App Links, Google Play Billing (futuro), Crashlytics NDK |
+| **iOS** | Interoperación Swift mínima, `Background App Refresh`, optimizaciones de memoria y ciclo de vida | FCM (proxy APNs), Universal Links, App Clips (reorden rápido), Sign in with Apple |
+| **Web (PWA)** | Service Workers, `go_router` con URLs limpias, `LayoutBuilder` responsivo, `IndexedDB` como respaldo | Firebase Hosting, Analytics (GA4), Remote Config para pruebas A/B, manifiesto PWA y caché offline |
+| **Windows** | Empaquetado MSIX, `NavigationRail` maestro-detalle, `FocusTraversal` para teclado, soporte alto DPI | Caché local SQLite como respaldo, Notificaciones de Windows, optimizaciones de renderizado Direct3D |
 
-- **🌐 Routing & Deep Linking:** `go_router` con `redirect` guards, deep links (`antigravity://pedido/123`), universal links (`https://antigravity.com/pedido/123`), state restoration por plataforma.
-- **📐 Responsive Framework:** Breakpoints dinámicos (`mobile <600`, `tablet 600-1024`, `desktop >1024`), `MediaQuery` adaptativo, `responsive_framework` para escalado de UI sin pérdida de densidad.
+- **🌐 Enrutamiento y Deep Linking:** `go_router` con guardas de `redirect`, enlaces profundos (`antigravity://pedido/123`), enlaces universales (`https://antigravity.com/pedido/123`), restauración de estado por plataforma.
+- **📐 Marco Responsivo:** Puntos de corte dinámicos (`móvil <600`, `tableta 600-1024`, `escritorio >1024`), adaptativo con `MediaQuery`, `responsive_framework` para escalado de UI sin pérdida de densidad.
 
 ---
 
-### 🔒 4. SEGURIDAD, GOBERNANZA & FIREBASE CONSOLE/STUDIO
-- **🛡️ Firestore Security Rules (RBAC & Field Validation)**
+### 🔒 4. SEGURIDAD, GOBERNANZA Y FIREBASE CONSOLE/STUDIO
+- **🛡️ Reglas de Seguridad de Firestore (RBAC y Validación de Campos)**
   ```javascript
   match /orders/{orderId} {
+    // Permitir lectura solo si el usuario está autenticado y es el dueño del pedido
     allow read: if request.auth != null && resource.data.cliente_id == request.auth.uid;
+    // Permitir creación solo con estado inicial válido y empleado asignado correctamente
     allow create: if request.auth != null && request.resource.data.estado == "RECIBIDO"
                     && request.resource.data.empleado_id in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.sucursales_asignadas;
+    // Permitir actualización solo para transiciones de estado válidas
     allow update: if request.auth != null && 
                     (resource.data.estado in ["RECIBIDO","EN_PREPARACION","HORNEANDO","EN_CAMINO"] &&
                      request.resource.data.estado == getNextValidState(resource.data.estado));
   }
   ```
-- **🔐 Cumplimiento & Privacidad:** PII cifrada en tránsito (TLS 1.3) y en reposo. Campos sensibles (`telefono`, `direccion_exacta`) tokenizados o ofuscados en logs. Auditoría vía Cloud Logging con retención de 90 días.
-- **📊 Firebase Console & Studio:**
-  - **Firebase Studio:** Prototipado rápido de esquemas, testing de reglas, simulación de carga con `Firebase Local Emulator Suite`.
-  - **Crashlytics & Performance:** Tracking de `ANR`, `freeze`, `cold start`, `slow network`. Métricas de `Time to Interactive` y `Frame Drops`.
-  - **Analytics & Remote Config:** Funnel de conversión (Catálogo → Carrito → Pago → Entrega), flags de features, banners promocionales dinámicos sin redeploy.
-  - **App Distribution:** Beta testing por canal (dev, staging, prod), rollout progresivo, rollback automático en métricas críticas.
+- **🔐 Cumplimiento y Privacidad:** PII cifrada en tránsito (TLS 1.3) y en reposo. Campos sensibles (`teléfono`, `dirección_exacta`) tokenizados u ofuscados en registros. Auditoría vía Cloud Logging con retención de 90 días.
+- **📊 Firebase Console y Studio:**
+  - **Firebase Studio:** Prototipado rápido de esquemas, prueba de reglas, simulación de carga con `Firebase Local Emulator Suite`.
+  - **Crashlytics y Performance:** Rastreo de `ANR`, congelamientos, inicio en frío, red lenta. Métricas de `Time to Interactive` y `Frame Drops`.
+  - **Analytics y Remote Config:** Embudo de conversión (Catálogo → Carrito → Pago → Entrega), flags de funciones, banners promocionales dinámicos sin redespliegue.
+  - **App Distribution:** Pruebas beta por canal (dev, staging, prod), despliegue progresivo, reversión automática ante métricas críticas.
 
 ---
 
-### 📦 5. STACK DE DEPENDENCIAS & FIREBASE TOOLCHAIN
+### 📦 5. PILA DE DEPENDENCIAS Y HERRAMIENTAS FIREBASE
 ```yaml
 dependencies:
   flutter: sdk: flutter
@@ -113,7 +116,7 @@ dependencies:
   intl: ^0.20.0
   formz: ^0.7.0
 
-  # Firebase Ecosystem
+  # Ecosistema Firebase
   firebase_core: ^3.0.0
   cloud_firestore: ^5.0.0
   firebase_auth: ^5.0.0
@@ -134,61 +137,61 @@ dev_dependencies:
   lint: ^2.3.0
   firebase_core_platform_interface: ^5.0.0 # para emuladores
 ```
-- **Toolchain:** `flutterfire configure`, `firebase emulators:start --only firestore,auth,functions`, `flutter analyze --fatal-infos`, `dart format .`, GitHub Actions (lint → test → build → deploy Firebase Hosting/Play/App Store).
-- **Gobernanza:** Commits semánticos (`feat:`, `fix:`, `chore:`, `refactor:`), PR templates con checklist de seguridad, coverage mínimo 80%, pruebas unitarias por capa, mocks estrictos de Firebase SDK.
+- **Cadena de Herramientas:** `flutterfire configure`, `firebase emulators:start --only firestore,auth,functions`, `flutter analyze --fatal-infos`, `dart format .`, GitHub Actions (lint → test → build → deploy Firebase Hosting/Play/App Store).
+- **Gobernanza:** Confirmaciones semánticas (`feat:`, `fix:`, `chore:`, `refactor:`), plantillas de PR con lista de verificación de seguridad, cobertura mínima del 80 %, pruebas unitarias por capa, mocks estrictos del SDK de Firebase.
 
 ---
 
-### 📤 6. ENTREGABLES TÉCNICOS EXPANDIDOS (GENERACIÓN INMEDIATA)
-Proporciona **exclusivamente** los siguientes artefactos listos para integración en pipeline CI/CD:
+### 📤 6. ENTREGABLES TÉCNICOS ESPERADOS (GENERACIÓN INMEDIATA)
+Proporciona **exclusivamente** los siguientes artefactos listos para integración en un pipeline CI/CD:
 
-1. **📁 Estructura de Directorios (Clean + Cloud-Native)**
+1. **📁 Estructura de Directorios (Arquitectura Limpia + Cloud-Native)**
    ```
    lib/
    ├── core/
-   │   ├── constants/          # Routes, Firebase collections, breakpoints
-   │   ├── errors/             # Failures, Either, domain exceptions
-   │   ├── network/            # Dio interceptors, retry policies, cache headers
-   │   ├── utils/              # Formatters, validators, currency helpers
-   │   └── theme/              # ThemeData, tokens, typography, responsive mixins
+   │   ├── constants/          # Rutas, colecciones Firebase, puntos de corte
+   │   ├── errors/             # Fallos, Either, excepciones de dominio
+   │   ├── network/            # Interceptores Dio, políticas de reintento, cabeceras de caché
+   │   ├── utils/              # Formateadores, validadores, auxiliares de moneda
+   │   └── theme/              # ThemeData, tokens, tipografía, mixins responsivos
    ├── data/
-   │   ├── datasources/        # Remote (Firestore/Functions), Local (Hive/Isar)
+   │   ├── datasources/        # Remoto (Firestore/Functions), Local (Hive/Isar)
    │   ├── models/             # DTOs (@freezed + @JsonSerializable)
-   │   └── repositories/       # Contracts → Implementations with sync logic
+   │   └── repositories/       # Contratos → Implementaciones con lógica de sincronización
    ├── domain/
-   │   ├── entities/           # Pure business objects
-   │   ├── repositories/       # Abstract interfaces
-   │   └── usecases/           # OrderPlacement, StockCheck, StateTransition
+   │   ├── entities/           # Objetos puros de negocio
+   │   ├── repositories/       # Interfaces abstractas
+   │   └── usecases/           # ColocaciónPedido, VerificarStock, TransiciónEstado
    ├── presentation/
-   │   ├── bloc/               # Events, States, BLoCs (Cubit for simple)
-   │   ├── pages/              # Route builders, layout adaptators
-   │   └── widgets/            # Atomic, molecular, organism components
-   ├── cloud_functions/        # TypeScript/Node18 (stock, payment, state)
+   │   ├── bloc/               # Eventos, Estados, BLoCs (Cubit para casos simples)
+   │   ├── pages/              # Constructores de rutas, adaptadores de layout
+   │   └── widgets/            # Componentes atómicos, moleculares y organizacionales
+   ├── cloud_functions/        # TypeScript/Node18 (stock, pago, estado)
    ├── firebase/               # firestore.rules, firebase.json, .firebaserc
-   └── main.dart               # App bootstrap, Firebase init, DI setup
+   └── main.dart               # Arranque de app, inicialización Firebase, configuración DI
    ```
 
-2. **🎨 `ThemeData` (Material 3 + Domino's Tokens + Dark/Light)**
-   - Implementación completa con `ColorScheme.fromSeed`, escalas de tipografía, elevaciones, estados de botón, y `ShapeBorder` estandarizado (`RoundedRectangleBorder`, `StadiumBorder`).
+2. **🎨 `ThemeData` (Material 3 + Tokens Domino's + Claro/Oscuro)**
+   - Implementación completa con `ColorScheme.fromSeed`, escalas de tipografía, elevaciones, estados de botón y `ShapeBorder` estandarizado (`RoundedRectangleBorder`, `StadiumBorder`).
 
-3. **📦 Modelos Base (`Producto` & `Pedido`)**
-   - Clases `@freezed` con `json_serializable`, validación de dominio en factories, manejo de `Decimal` para precios, máquina de estado tipada (`OrderStatus` enum con transiciones válidas), campo `personalizacion` tipado como `Map<String, dynamic>` con validación de schema.
-   - Métodos `fromFirestore`, `toMap`, `copyWith` seguros. Documentación `///` Javadoc-style.
+3. **📦 Modelos Base (`Producto` y `Pedido`)**
+   - Clases `@freezed` con `json_serializable`, validación de dominio en fábricas, manejo de `Decimal` para precios, máquina de estados tipada (`OrderStatus` enum con transiciones válidas), campo `personalizacion` tipado como `Map<String, dynamic>` con validación de esquema.
+   - Métodos `fromFirestore`, `toMap`, `copyWith` seguros. Documentación `///` estilo Javadoc.
 
-4. **🔐 Firestore Security Rules (Snippet Validado)**
-   - Reglas de acceso por rol, validación de estados permitidos, restricción de escritura directa a inventario, validación de monto de pago vs total pedido.
+4. **🔐 Reglas de Seguridad de Firestore (Fragmento Validado)**
+   - Reglas de acceso por rol, validación de estados permitidos, restricción de escritura directa a inventario, validación de monto de pago vs total del pedido.
 
 5. **⚡ Cloud Function (TypeScript/Node 18) para `placeOrder`**
-   - Función HTTPS o `onCall` que ejecuta `runTransaction`, valida stock atómico, aplica descuentos, genera referencia de pago, emite evento a Pub/Sub para notificaciones.
+   - Función HTTPS o `onCall` que ejecuta `runTransaction`, valida inventario atómico, aplica descuentos, genera referencia de pago, emite evento a Pub/Sub para notificaciones.
 
 6. **✅ Criterios de Aceptación Estrictos**
-   - Cero imports de `firebase_*` en `domain/`.
+   - Cero importaciones de `firebase_*` en `domain/`.
    - Uso explícito de `Result<T, Failure>` en repositorios.
    - `decimal` obligatorio para moneda. `double` prohibido en cálculos financieros.
-   - Código `flutter analyze --fatal-infos` limpio, `const` donde aplique, `@visibleForTesting` para mocks.
-   - Compatibilidad con `firebase emulators` sin cambios en código.
-   - Offline-first funcional: UI responde inmediatamente, sync en segundo plano, reconciliación automática.
+   - Código limpio con `flutter analyze --fatal-infos`, `const` donde aplique, `@visibleForTesting` para mocks.
+   - Compatibilidad con `firebase emulators` sin cambios en el código.
+   - Funcionamiento offline-first: la UI responde inmediatamente, sincronización en segundo plano, reconciliación automática.
 
 ---
 🔹 **INSTRUCCIÓN FINAL PARA EL AGENTE/IA:**  
-Genera el código completo solicitado en el punto 6, manteniendo sintaxis **Dart 3.5+** impecable, patrones inmutables, separación estricta de capas, y adherencia absoluta a las directrices arquitectónicas, de nube, multiplataforma y de negocio descritas. No omitas validaciones, no uses `dynamic` donde exista tipado seguro, y prioriza la mantenibilidad, observabilidad y resiliencia sobre la brevedad. El resultado debe ser `flutter analyze` clean, compatible con `firebase emulators`, listo para despliegue en **Android, iOS, Web y Windows**, y documentado para integración inmediata en un pipeline CI/CD empresarial.
+Genera el código completo solicitado en el punto 6, manteniendo sintaxis **Dart 3.5+** impecable, patrones inmutables, separación estricta de capas y adherencia absoluta a las directrices arquitectónicas, de nube, multiplataforma y de negocio descritas. No omitas validaciones, no uses `dynamic` donde exista tipado seguro, y prioriza la mantenibilidad, observabilidad y resiliencia sobre la brevedad. El resultado debe ser compatible con `flutter analyze`, funcional con `firebase emulators`, listo para despliegue en **Android, iOS, Web y Windows**, y documentado para integración inmediata en un pipeline CI/CD empresarial.

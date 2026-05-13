@@ -1,0 +1,99 @@
+¡Claro que sí! Si vamos a jugar en las grandes ligas, necesitamos un documento que no deje nada al azar. Vamos a desglosar una **Estrategia de Arquitectura Empresarial** y el **Prompt Definitivo** que obligará a cualquier IA a entregarte código de calidad de producción senior.
+
+---
+
+## 🏛️ Plan de Implementación: "Domino's Digital Ecosystem"
+
+Para que esta app funcione en Android, Web, Windows e iOS sin romperse, seguiremos el patrón de **Arquitectura de Capas (Clean Architecture)**.
+
+### 1. Capa de Datos (Data Layer)
+
+* **Modelos (DTOs):** Creación de clases Dart que mapeen al 100% tus tablas.
+* *Ejemplo:* El modelo `Pedido` debe incluir un objeto `Cliente` y una lista de `DetallePedido`.
+
+
+* **Manejo de Tipos de Datos:** Uso de `Decimal` para los precios (evitando errores de redondeo en `double`) y `DateTime` para `fecha_hora`.
+
+### 2. Capa de Dominio (Business Logic Layer)
+
+* **Repositorios:** Definición de interfaces para lo que la app hace (ej: `IOrderRepository`, `IInventoryRepository`).
+* **Casos de Uso (Use Cases):**
+* `ProcessNewOrder`: Valida stock en `INVENTARIO` antes de crear el `PEDIDO`.
+* `CalculateTotalWithTax`: Lógica centralizada para no repetir cálculos en las pantallas.
+
+
+
+### 3. Capa de Presentación (UI Layer)
+
+* **Gestión de Estado:** Implementación con **flutter_bloc**. Es el estándar para apps robustas de delivery porque permite manejar estados complejos (Buscando -> Carrito -> Procesando Pago -> Tracking).
+* **Responsividad:** * **Mobile:** Navegación por Tabs y gestos.
+* **Web/Windows:** Layout tipo "Dashboard" con barra lateral persistente y aprovechamiento de pantalla ancha.
+
+
+
+---
+
+## 🎯 El Mega-Prompt: Nivel Arquitecto Senior
+
+Este prompt está diseñado para que lo pegues y obtengas una estructura profesional. Copia desde aquí:
+
+> **Contexto del Proyecto:**
+> Estás desarrollando "Domino's Pizza Antigravity", una suite multiplataforma (Flutter) de alto rendimiento. El sistema gestiona desde la venta al cliente hasta el control de inventario por sucursal.
+> **1. Requerimientos Técnicos Obligatorios:**
+> * **Arquitectura:** Clean Architecture (Data, Domain, Presentation).
+> * **Gestión de Estado:** BLoC (Business Logic Component).
+> * **Inyección de Dependencias:** Get_it o Riverpod.
+> * **Estándar de Código:** Effective Dart, principios SOLID y DRY.
+> 
+> 
+> **2. Sistema de Diseño (Design System):**
+> Implementa un archivo `app_theme.dart` con:
+> * **Colores:** Azul Primario (`#006491`), Rojo Secundario (`#E31837`), Fondos Blancos (`#FFFFFF`), Textos y Acentos Negros (`#000000`).
+> * **Componentes:** Botones con elevación sutil, inputs con bordes redondeados (Radius 12), y Shimmer effects para cargas.
+> * **Adaptabilidad:** Define breakpoints para Mobile (Phone/Tablet) y Desktop (Web/Windows).
+> 
+> 
+> **3. Mapeo de Base de Datos (ERD Fidelity):**
+> Genera los modelos Dart basados estrictamente en estas tablas de mi esquema:
+> * `CLIENTE` -> `PEDIDO` -> `DETALLE_PEDIDO` (Relación 1:N:M).
+> * `SUCURSAL` -> `INVENTARIO` (Relación para control de existencias).
+> * `PAGO` (Gestión de métodos y estados: 'Pendiente', 'Aprobado').
+> * `EMPLEADO` (Asignación a pedidos y sucursales).
+> 
+> 
+> **4. Lógica de Flujo de Trabajo:**
+> * **Escenario de Pedido:** Cuando un cliente agrega un producto, consulta la tabla `PRODUCTO` por `precio_base` y permite la `personalizacion` en `DETALLE_PEDIDO`.
+> * **Validación de Stock:** Antes de confirmar el pedido, verifica `stock_actual` en la tabla `INVENTARIO` filtrando por `id_sucursal`.
+> * **Tracking Realtime:** La UI debe actualizarse según el campo `estado` en la tabla `PEDIDO`.
+> 
+> 
+> **5. Entregable Esperado:**
+> 1. Estructura de carpetas profesional.
+> 2. Código completo de `ThemeData` con la paleta de colores Domino's.
+> 3. Los modelos de datos (`models/`) para `Pedido` y `Producto` con métodos `fromMap` y `toMap`.
+> 4. Un ejemplo de BLoC para manejar el carrito de compras.
+> 
+> 
+> **IMPORTANTE:** No resumas el código. Escribe código modular, desacoplado y listo para ser escalado. No uses librerías en versiones beta.
+
+---
+
+## 🛠️ Tabla de Equivalencias (DB vs Flutter)
+
+Para que tu equipo de desarrollo no se confunda, aquí tienes el mapeo técnico:
+
+| Campo SQL | Tipo en Flutter (Dart) | Propósito |
+| --- | --- | --- |
+| `id_... (INT PK)` | `int` | Identificadores únicos. |
+| `precio_base (DECIMAL)` | `double` o `Decimal` | Evitar pérdida de centavos. |
+| `disponible (BOOLEAN)` | `bool` | Control de visibilidad en el menú. |
+| `fecha_hora (DATETIME)` | `DateTime` | Timestamp para tracking y auditoría. |
+| `personalizacion (STRING)` | `String` | JSON o String largo para extras de pizza. |
+
+---
+
+### 💡 Un toque de Wit:
+
+Recuerda que en una app de Domino's, la velocidad no es solo para el repartidor, también es para el código. Si tu `BLoC` tarda más que el horno en calentar, el cliente se va. Mantén las peticiones a la base de datos optimizadas usando **Lazy Loading** en la tabla de `PRODUCTO`.
+
+¿Te gustaría que genere ahora mismo el código del **Theme de Colores** y la estructura de carpetas para que empieces a copiarlo en tu IDE?
